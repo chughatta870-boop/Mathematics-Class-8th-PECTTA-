@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#1F3D2B">
+<title>PEC Class 8 Mathematics — Test &amp; Result System</title>
+<meta name="description" content="Class 8 Mathematics practice papers as per PEC pattern — 5 chapter-wise + 5 full syllabus papers, 100 marks each, with downloadable result cards.">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231F3D2B'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23F2E9D8' font-family='Georgia,serif' font-weight='bold'%3E8%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="./style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="board-texture" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">8</span>
+      <div class="brand-text">
+        <strong>PEC Class 8 Mathematics</strong>
+        <span>Test &amp; Result Card System</span>
+      </div>
+    </div>
+    <nav class="topnav">
+      <button class="nav-btn" data-nav="home" id="navHome">Papers</button>
+      <button class="nav-btn" data-nav="history" id="navHistory">My Results</button>
+      <button class="nav-btn" data-nav="about" id="navAbout">Syllabus</button>
+    </nav>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- HOME: paper listing -->
+  <section id="screen-home" class="screen active">
+    <div class="ledger-head">
+      <h1>Register of Papers</h1>
+      <p class="sub">10 model papers · Class 8 Mathematics · 100 marks each · Passing marks 33%</p>
+    </div>
+
+    <div class="ledger-group">
+      <h2 class="ledger-title"><span class="tag tag-chapter">Chapter&#8209;wise</span> Papers 1–5</h2>
+      <div class="paper-grid" id="chapterPapers"></div>
+    </div>
+
+    <div class="ledger-group">
+      <h2 class="ledger-title"><span class="tag tag-full">Full Syllabus</span> Papers 6–10</h2>
+      <div class="paper-grid" id="fullPapers"></div>
+    </div>
+  </section>
+
+  <!-- STUDENT INFO -->
+  <section id="screen-info" class="screen">
+    <div class="sheet-card narrow">
+      <h1>Candidate Details</h1>
+      <p class="sub" id="infoPaperTitle"></p>
+      <form id="studentForm">
+        <label>Student Name
+          <input type="text" id="stuName" required placeholder="e.g. Ahmed Raza">
+        </label>
+        <label>Roll No.
+          <input type="text" id="stuRoll" required placeholder="e.g. 24-A-118">
+        </label>
+        <label>School / Center <span class="opt">(optional)</span>
+          <input type="text" id="stuSchool" placeholder="GHS 124/NB">
+        </label>
+        <div class="btn-row">
+          <button type="button" class="btn ghost" data-nav="home">Back</button>
+          <button type="submit" class="btn primary">Start Paper &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- EXAM -->
+  <section id="screen-exam" class="screen">
+    <div class="exam-shell">
+      <div class="exam-header">
+        <div>
+          <strong id="examPaperTitle">Paper</strong>
+          <span id="examMeta" class="sub"></span>
+        </div>
+        <div class="exam-progress">
+          <span id="examProgressText">Q 1 / 20</span>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+      </div>
+      <div class="answer-sheet" id="questionList"></div>
+      <div class="exam-footer">
+        <span id="answeredCount" class="sub">0 answered</span>
+        <button class="btn primary" id="submitPaperBtn">Submit Paper</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div class="mark-sheet" id="markSheet">
+        <div class="ms-topline"></div>
+        <div class="ms-header">
+          <div class="ms-title">
+            <strong id="msSchool">GHS 124/NB</strong>
+            <span>Result Card — PEC Model Examination</span>
+          </div>
+          <div class="ms-badge" id="stampBadge">PASS</div>
+        </div>
+        <table class="ms-table">
+          <tr><td>Student Name</td><td id="msName">—</td></tr>
+          <tr><td>Roll No.</td><td id="msRoll">—</td></tr>
+          <tr><td>Class</td><td>8th — Mathematics</td></tr>
+          <tr><td>Paper</td><td id="msPaper">—</td></tr>
+          <tr><td>Date</td><td id="msDate">—</td></tr>
+        </table>
+        <div class="ms-scoreboard">
+          <div class="score-box">
+            <span class="score-num" id="msObtained">0</span>
+            <span class="score-label">Marks Obtained</span>
+          </div>
+          <div class="score-box">
+            <span class="score-num">100</span>
+            <span class="score-label">Total Marks</span>
+          </div>
+          <div class="score-box">
+            <span class="score-num" id="msPercent">0%</span>
+            <span class="score-label">Percentage</span>
+          </div>
+          <div class="score-box">
+            <span class="score-num">33%</span>
+            <span class="score-label">Passing Marks</span>
+          </div>
+        </div>
+        <div class="ms-remark" id="msRemark"></div>
+        <div class="ms-signrow">
+          <div class="sign-line">Examiner</div>
+          <div class="sign-line">Head Teacher</div>
+        </div>
+      </div>
+
+      <div class="btn-row center">
+        <button class="btn primary" id="downloadPdfBtn">&#8681; Download PDF</button>
+        <button class="btn secondary" id="sharePdfBtn">&#8599; Share Result</button>
+        <button class="btn ghost" id="reviewBtn">Review Answers</button>
+        <button class="btn ghost" data-nav="home">Papers List</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="screen-review" class="screen">
+    <div class="exam-shell">
+      <div class="exam-header"><strong>Answer Review</strong></div>
+      <div class="answer-sheet" id="reviewList"></div>
+      <div class="exam-footer">
+        <button class="btn ghost" data-nav="result">Back to Result</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="screen-history" class="screen">
+    <div class="ledger-head">
+      <h1>My Results</h1>
+      <p class="sub">Saved on this device only.</p>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </section>
+
+  <!-- ABOUT / SYLLABUS -->
+  <section id="screen-about" class="screen">
+    <div class="sheet-card">
+      <h1>Syllabus Covered</h1>
+      <p class="sub">All 12 chapters of Class 8 Mathematics (PEC pattern)</p>
+      <ol class="chapter-list" id="chapterListView"></ol>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span>Works fully offline once installed. Made for Class 8 Mathematics practice.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script src="./script.js"></script>
+</body>
+</html>
