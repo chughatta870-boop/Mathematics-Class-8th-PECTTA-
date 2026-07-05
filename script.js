@@ -359,4 +359,195 @@ function renderResult(r){
   document.getElementById("msName").textContent = r.name;
   document.getElementById("msRoll").textContent = r.roll;
   document.getElementById("msPaper").textContent = r.paperTitle;
-  document.getElementById("msDate").textContent = fmtDate(new Da
+  document.getElementById("msDate").textContent = fmtDate(new Date(r.date));
+  document.getElementById("msObtained").textContent = r.marksObtained;
+  document.getElementById("msPercent").textContent = r.percentage + "%";
+
+  const badge = document.getElementById("stampBadge");
+  badge.textContent = r.pass ? "PASS" : "FAIL";
+  badge.classList.toggle("fail", !r.pass);
+
+  const remark = document.getElementById("msRemark");
+  if(r.pass){
+    remark.textContent = r.percentage >= 80 ? "Excellent performance. Keep it up!" :
+                          r.percentage >= 60 ? "Good performance. Well done." :
+                          "Satisfactory result. More practice will help.";
+  } else {
+    remark.textContent = "Did not reach the passing marks. More practice is needed.";
+  }
+}
+
+/* ---------- 13. Review answers ---------- */
+function renderReview(){
+  const r = state.lastResult;
+  const list = document.getElementById("reviewList");
+  list.innerHTML = "";
+  r.questions.forEach((q, idx)=>{
+    const block = document.createElement("div");
+    block.className = "q-block";
+    block.innerHTML = `
+      <span class="q-num-chip">Q${idx+1}</span>
+      <div class="q-text">${q.q}</div>
+      <div class="q-options">
+        ${q.o.map((opt,oi)=>{
+          let cls = "q-option";
+          if(oi === q.a) cls += " correct-answer";
+          else if(oi === q.chosen && q.chosen !== q.a) cls += " wrong-answer";
+          return `<div class="${cls}"><span class="opt-letter">${String.fromCharCode(65+oi)}</span><span>${opt}</span></div>`;
+        }).join("")}
+      </div>
+    `;
+    list.appendChild(block);
+  });
+}
+document.getElementById("reviewBtn").addEventListener("click", ()=>{
+  renderReview();
+  showScreen("review");
+});
+
+/* ---------- 14. History ---------- */
+function renderHistory(){
+  const list = document.getElementById("historyList");
+  const items = loadHistory();
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state">No results saved yet. Attempt a paper to see it here.</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it=>`
+    <div class="history-item ${it.pass?"":"fail"}">
+      <div class="h-main">
+        <strong>${it.paperTitle}</strong>
+        <div>${it.name} · Roll: ${it.roll} · ${fmtDate(new Date(it.date))}</div>
+      </div>
+      <div class="h-score">${it.marksObtained}/100 (${it.pass?"PASS":"FAIL"})</div>
+    </div>
+  `).join("");
+}
+
+/* ---------- 15. PDF generation (download / share) ---------- */
+function buildResultPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const r = state.lastResult;
+  const pageW = doc.internal.pageSize.getWidth();
+  let y = 60;
+
+  doc.setDrawColor(201,162,39);
+  doc.setLineWidth(3);
+  doc.line(40, 40, pageW-40, 40);
+
+  doc.setFont("times","bold");
+  doc.setFontSize(18);
+  doc.setTextColor(27,42,74);
+  doc.text(r.school, pageW/2, y, {align:"center"});
+  y += 22;
+  doc.setFontSize(12);
+  doc.setFont("times","normal");
+  doc.text("Result Card — PEC Model Examination", pageW/2, y, {align:"center"});
+  y += 30;
+
+  doc.setDrawColor(201,201,201);
+  doc.setLineWidth(1);
+  const rows = [
+    ["Student Name", r.name],
+    ["Roll No.", r.roll],
+    ["Class", "8th — Mathematics"],
+    ["Paper", r.paperTitle],
+    ["Date", fmtDate(new Date(r.date))],
+  ];
+  doc.setFontSize(11);
+  rows.forEach(([label,val])=>{
+    doc.setFont("helvetica","normal");
+    doc.setTextColor(107,107,99);
+    doc.text(label, 50, y);
+    doc.setFont("courier","bold");
+    doc.setTextColor(27,42,74);
+    doc.text(String(val), 220, y);
+    doc.setDrawColor(230,224,204);
+    doc.line(50, y+6, pageW-50, y+6);
+    y += 22;
+  });
+  y += 18;
+
+  const boxes = [
+    ["Marks Obtained", String(r.marksObtained)],
+    ["Total Marks", "100"],
+    ["Percentage", r.percentage + "%"],
+    ["Passing Marks", "33%"],
+  ];
+  const boxW = (pageW-100)/4;
+  boxes.forEach((b,i)=>{
+    const bx = 50 + i*boxW;
+    doc.setDrawColor(227,218,192);
+    doc.rect(bx, y, boxW-8, 50);
+    doc.setFont("courier","bold");
+    doc.setFontSize(14);
+    doc.setTextColor(27,42,74);
+    doc.text(b[1], bx+(boxW-8)/2, y+22, {align:"center"});
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(8);
+    doc.setTextColor(107,107,99);
+    doc.text(b[0].toUpperCase(), bx+(boxW-8)/2, y+38, {align:"center"});
+  });
+  y += 80;
+
+  doc.setFont("times","bolditalic");
+  doc.setFontSize(14);
+  doc.setTextColor(r.pass ? 46:192, r.pass?125:57, r.pass?70:43);
+  doc.text(r.pass ? "RESULT: PASS" : "RESULT: FAIL", pageW/2, y, {align:"center"});
+  y += 30;
+
+  doc.setDrawColor(201,162,39);
+  doc.setLineWidth(3);
+  doc.line(40, 780, pageW-40, 780);
+
+  return doc;
+}
+
+document.getElementById("downloadPdfBtn").addEventListener("click", ()=>{
+  try{
+    const doc = buildResultPdf();
+    const r = state.lastResult;
+    doc.save(`${r.name.replace(/\s+/g,"_")}_${r.paperTitle.replace(/\s+/g,"_")}.pdf`);
+    toast("PDF downloaded");
+  }catch(err){
+    console.error(err);
+    toast("Could not generate PDF");
+  }
+});
+
+document.getElementById("sharePdfBtn").addEventListener("click", async ()=>{
+  try{
+    const doc = buildResultPdf();
+    const r = state.lastResult;
+    const blob = doc.output("blob");
+    const fileName = `${r.name.replace(/\s+/g,"_")}_Result.pdf`;
+    const file = new File([blob], fileName, { type: "application/pdf" });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({
+        files: [file],
+        title: "Result Card",
+        text: `${r.name}'s result for ${r.paperTitle}`
+      });
+    } else {
+      doc.save(fileName);
+      toast("Sharing not supported here — PDF downloaded instead");
+    }
+  }catch(err){
+    if(err.name !== "AbortError"){
+      console.error(err);
+      toast("Could not share PDF");
+    }
+  }
+});
+
+/* ---------- 16. Service worker registration ---------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+
+/* ---------- 17. Init ---------- */
+renderPapers();
+renderChapterList();
